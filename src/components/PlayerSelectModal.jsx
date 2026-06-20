@@ -4,10 +4,11 @@ import { X, Search } from 'lucide-react';
 export default function PlayerSelectModal({ title, players, onSelect, onClose, excludeIds = [] }) {
   const [search, setSearch] = useState('');
 
-  const filtered = players.filter(p =>
-    !excludeIds.includes(p.id) &&
-    p.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = players.filter(p => {
+    const nameToSearch = p.name || `Player ${p.number}`;
+    return !excludeIds.includes(p.id) &&
+      nameToSearch.toLowerCase().includes(search.toLowerCase());
+  });
 
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
