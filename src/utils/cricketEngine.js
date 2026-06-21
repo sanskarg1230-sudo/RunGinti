@@ -152,13 +152,17 @@ export function processDelivery(innings, delivery, target = null) {
     bowler.wides += 1;
     bowler.currentOverRuns += 1 + extras;
   } else if (type === DELIVERY_TYPES.NO_BALL) {
-    state.extras.noBalls += 1 + runs;
+    state.extras.noBalls += 1;
     state.runs += 1 + runs;
     bowler.runs += 1 + runs;
     bowler.noBalls += 1;
     bowler.currentOverRuns += 1 + runs;
-    // No balls do not count towards batsman's runs or balls faced based on user request
-
+    if (striker) {
+      striker.runs += runs;
+      striker.balls += 1;
+      if (runs === 4) striker.fours += 1;
+      if (runs === 6) striker.sixes += 1;
+    }
   } else if (type === DELIVERY_TYPES.BYE) {
     state.extras.byes += runs;
     state.runs += runs;
