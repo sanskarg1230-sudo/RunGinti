@@ -152,19 +152,13 @@ export function processDelivery(innings, delivery, target = null) {
     bowler.wides += 1;
     bowler.currentOverRuns += 1 + extras;
   } else if (type === DELIVERY_TYPES.NO_BALL) {
-    state.extras.noBalls += 1;
+    state.extras.noBalls += 1 + runs;
     state.runs += 1 + runs;
     bowler.runs += 1 + runs;
     bowler.noBalls += 1;
     bowler.currentOverRuns += 1 + runs;
-    if (striker) {
-      striker.runs += runs;
-      striker.balls += 0; // no ball doesn't count for batsman balls faced... wait, it does in modern cricket
-      // Actually: no ball counts for batsman's balls faced in most formats
-      striker.balls += 1;
-      if (runs === 4) striker.fours += 1;
-      if (runs === 6) striker.sixes += 1;
-    }
+    // No balls do not count towards batsman's runs or balls faced based on user request
+
   } else if (type === DELIVERY_TYPES.BYE) {
     state.extras.byes += runs;
     state.runs += runs;
