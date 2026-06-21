@@ -647,6 +647,41 @@ export default function LiveScoring() {
             </div>
           </div>
         )}
+
+        {/* Recent Overs (Last 3) */}
+        {innings.overHistory && innings.overHistory.length > 0 && (
+          <div style={{ marginTop: 16 }}>
+            <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Recent Overs</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {innings.overHistory.slice(-3).reverse().map((o, idx) => (
+                <div key={idx} style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.05)', borderRadius: 8, padding: '8px 12px' }}>
+                  <div style={{ width: 50, fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-primary-light)' }}>
+                    Ov {o.over}
+                  </div>
+                  <div className="over-balls" style={{ flex: 1, gap: 4, justifyContent: 'flex-start' }}>
+                    {o.balls.map((b, i) => {
+                      let cls = 'ball-0';
+                      if (b.type === DELIVERY_TYPES.WICKET) cls = 'ball-W';
+                      else if (b.type === DELIVERY_TYPES.WIDE) cls = 'ball-Wd';
+                      else if (b.type === DELIVERY_TYPES.NO_BALL) cls = 'ball-NB';
+                      else if (b.runs === 6) cls = 'ball-6';
+                      else if (b.runs === 4) cls = 'ball-4';
+                      else cls = `ball-${b.runs}`;
+                      return (
+                        <div key={i} className={`ball-indicator ${cls}`} style={{ width: 22, height: 22, fontSize: '0.65rem' }}>
+                          {b.type === DELIVERY_TYPES.WICKET ? 'W' : b.type === DELIVERY_TYPES.WIDE ? 'Wd' : b.type === DELIVERY_TYPES.NO_BALL ? 'NB' : b.runs}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'white', marginLeft: 8 }}>
+                    {o.runs} {o.runs === 1 ? 'run' : 'runs'}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="container" style={{ paddingTop: 14 }}>
