@@ -48,6 +48,27 @@ function MatchSettingsModal({ match, onSave, onClose }) {
   );
 }
 
+// ── Retire Modal ──────────────────────────────────────────────────────────
+function RetireModal({ onConfirm, onClose }) {
+  return (
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal animate-slide-up">
+        <div className="modal-handle" />
+        <div className="modal-title">Retire Batsman</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <button className="btn btn-secondary" style={{ minHeight: 48 }} onClick={() => onConfirm('hurt')}>
+            <span style={{ fontSize: '1.2rem', marginRight: 8 }}>🤕</span> Retired Hurt (Can return)
+          </button>
+          <button className="btn btn-secondary" style={{ minHeight: 48 }} onClick={() => onConfirm('out')}>
+            <span style={{ fontSize: '1.2rem', marginRight: 8 }}>🚶</span> Retired Out (Wicket)
+          </button>
+        </div>
+        <button className="btn btn-ghost btn-full" style={{ marginTop: 12 }} onClick={onClose}>Cancel</button>
+      </div>
+    </div>
+  );
+}
+
 // ── Innings Break Panel ───────────────────────────────────────────────────
 function InningsBreakPanel({ match, inn1, nextTeam, onStart, matchType, inningsIndex }) {
   const target = inn1.runs + 1;
@@ -178,6 +199,7 @@ export default function LiveScoring() {
   const [showDismissal, setShowDismissal] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showInningsBreak, setShowInningsBreak] = useState(false);
+  const [showRetireModal, setShowRetireModal] = useState(false);
   const [showExtrasModal, setShowExtrasModal] = useState(null);
   const [showEditPlayer, setShowEditPlayer] = useState(null); // player object to edit
   const [pendingWicket, setPendingWicket] = useState(null);
@@ -537,6 +559,12 @@ export default function LiveScoring() {
     setShowNewBatsman(true);
   };
 
+  const handleRetireConfirm = (type) => {
+    setShowRetireModal(false);
+    if (type === 'hurt') handleRetiredHurt();
+    else if (type === 'out') handleRetiredOut();
+  };
+
   const handleMatchSettings = async (settings) => {
     await updateMatch(matchId, settings);
     const m = await getMatch(matchId);
@@ -835,14 +863,9 @@ export default function LiveScoring() {
           <button className="btn btn-ghost btn-sm" onClick={handleUndo}>
             <RotateCcw size={15} /> Undo Last Ball
           </button>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
-            <button className="btn btn-ghost btn-sm" style={{ padding: '0 4px', fontSize: '0.75rem' }} onClick={handleRetiredOut}>
-              Ret. Out
-            </button>
-            <button className="btn btn-ghost btn-sm" style={{ padding: '0 4px', fontSize: '0.75rem' }} onClick={handleRetiredHurt}>
-              Ret. Hurt
-            </button>
-          </div>
+          <button className="btn btn-ghost btn-sm" onClick={() => setShowRetireModal(true)}>
+            Retire Batsman
+          </button>
           <button className="btn btn-ghost btn-sm" onClick={() => navigate(`/match/${matchId}/summary`)}>
             View Scorecard
           </button>
@@ -912,6 +935,12 @@ export default function LiveScoring() {
             bowlers={innings.bowlers}
             onConfirm={handleDismissalConfirm}
             onClose={() => { setShowDismissal(false); setPendingWicket(null); }}
+          />
+        )}
+        {showRetireModal && (
+          <RetireModal
+            onConfirm={handleRetireConfirm}
+            onClose={() => setShowRetireModal(false)}
           />
         )}
         {showSettings && (
