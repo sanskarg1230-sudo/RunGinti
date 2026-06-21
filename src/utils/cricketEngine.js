@@ -159,7 +159,7 @@ export function processDelivery(innings, delivery, target = null) {
     bowler.currentOverRuns += 1 + runs;
     if (striker) {
       striker.runs += runs;
-      striker.balls += 1;
+      // Do not count the no ball as a ball faced by the batsman per user request
       if (runs === 4) striker.fours += 1;
       if (runs === 6) striker.sixes += 1;
     }
