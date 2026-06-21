@@ -579,7 +579,10 @@ export default function LiveScoring() {
       {/* Top Bar */}
       <div style={{
         background: 'var(--bg-surface)',
-        padding: '12px 16px',
+        paddingTop: 'calc(12px + env(safe-area-inset-top, 0px))',
+        paddingBottom: '12px',
+        paddingLeft: 'max(16px, env(safe-area-inset-left, 0px))',
+        paddingRight: 'max(16px, env(safe-area-inset-right, 0px))',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',

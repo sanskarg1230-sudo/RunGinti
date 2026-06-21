@@ -50,7 +50,11 @@ export default function Dashboard() {
         position: 'sticky', top: 0, zIndex: 40,
         background: 'var(--bg-surface)', backdropFilter: 'blur(12px)',
         borderBottom: '1px solid var(--border-color)',
-        padding: '16px', marginBottom: 24,
+        paddingTop: 'calc(16px + env(safe-area-inset-top, 0px))',
+        paddingBottom: '16px',
+        paddingLeft: 'max(16px, env(safe-area-inset-left, 0px))',
+        paddingRight: 'max(16px, env(safe-area-inset-right, 0px))',
+        marginBottom: 24,
         display: 'flex', justifyContent: 'space-between', alignItems: 'center'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
