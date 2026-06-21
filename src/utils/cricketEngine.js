@@ -234,7 +234,7 @@ export function processDelivery(innings, delivery, target = null) {
   }
 
   // ── Strike rotation ──────────────────────────────────────────────────────
-  if (legal && type !== DELIVERY_TYPES.WICKET) {
+  if (type !== DELIVERY_TYPES.WICKET) {
     const oddRuns = (runs + extras) % 2 === 1;
     if (oddRuns && state.nonStrikerIndex !== null) {
       // Swap striker and non-striker
