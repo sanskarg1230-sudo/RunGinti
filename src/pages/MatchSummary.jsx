@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Download, FileJson, ChevronLeft, Trophy, RotateCcw, Sun, Moon } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { getMatch } from '../db/database';
-import { formatOvers, calcSR, calcEconomy, getInningsLabel, MATCH_TYPES } from '../utils/cricketEngine';
+import { formatOvers, calcSR, calcEconomy, getInningsLabel, MATCH_TYPES, DELIVERY_TYPES } from '../utils/cricketEngine';
 import { exportMatchPDF } from '../utils/exportPDF';
 import { exportMatchJSON } from '../utils/exportJSON';
 import { showToast } from '../components/Toast';
@@ -60,7 +60,7 @@ function BattingTable({ batsmen, extras, totalRuns, totalWickets, totalBalls }) 
   );
 }
 
-function BowlingTable({ bowlers }) {
+function BowlingTable({ bowlers, overHistory }) {
   return (
     <div style={{ overflowX: 'auto' }}>
       <table className="score-table">
@@ -77,15 +77,51 @@ function BowlingTable({ bowlers }) {
         </thead>
         <tbody>
           {(bowlers||[]).map((b, i) => (
-            <tr key={i}>
-              <td style={{ fontWeight: 600 }}>{b.name}</td>
-              <td>{formatOvers(b.legalBalls)}</td>
-              <td>{b.maidens}</td>
-              <td>{b.runs}</td>
-              <td style={{ fontWeight: 700, color: b.wickets > 0 ? 'var(--color-primary)' : undefined }}>{b.wickets}</td>
-              <td>{calcEconomy(b.runs, b.legalBalls)}</td>
-              <td style={{ fontSize: '0.8rem' }}>{b.wides||0}/{b.noBalls||0}</td>
-            </tr>
+            <React.Fragment key={i}>
+              <tr>
+                <td style={{ fontWeight: 600 }}>{b.name}</td>
+                <td>{formatOvers(b.legalBalls)}</td>
+                <td>{b.maidens}</td>
+                <td>{b.runs}</td>
+                <td style={{ fontWeight: 700, color: b.wickets > 0 ? 'var(--color-primary)' : undefined }}>{b.wickets}</td>
+                <td>{calcEconomy(b.runs, b.legalBalls)}</td>
+                <td style={{ fontSize: '0.8rem' }}>{b.wides||0}/{b.noBalls||0}</td>
+              </tr>
+              {overHistory && overHistory.some(oh => oh.bowlerName === b.name) && (
+                <tr>
+                  <td colSpan={7} style={{ padding: '8px 12px', background: 'var(--bg-surface-2)', borderBottom: '1px solid var(--border-color)' }}>
+                    <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
+                      {overHistory.filter(oh => oh.bowlerName === b.name).map((oh, j) => (
+                        <div key={j} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--bg-surface)', padding: '6px 10px', borderRadius: 8, flexShrink: 0, border: '1px solid var(--border-color)' }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)' }}>Ov {oh.over + 1}</span>
+                          <div style={{ display: 'flex', gap: 4 }}>
+                            {oh.balls.map((ball, bi) => {
+                              let cls = 'ball-0';
+                              let label = ball.runs;
+                              if (ball.type === DELIVERY_TYPES.WICKET) { cls = 'ball-W'; label = 'W'; }
+                              else if (ball.type === DELIVERY_TYPES.WIDE) { cls = 'ball-Wd'; label = 'Wd'; }
+                              else if (ball.type === DELIVERY_TYPES.NO_BALL) { cls = 'ball-NB'; label = 'NB'; }
+                              else if (ball.runs === 6) cls = 'ball-6';
+                              else if (ball.runs === 4) cls = 'ball-4';
+                              else cls = `ball-${ball.runs}`;
+                              
+                              if (ball.type === DELIVERY_TYPES.BYE) label = `${ball.runs}B`;
+                              if (ball.type === DELIVERY_TYPES.LEG_BYE) label = `${ball.runs}LB`;
+
+                              return (
+                                <div key={bi} className={`ball-indicator ${cls}`} style={{ width: 22, height: 22, fontSize: '0.65rem', animation: 'none' }}>
+                                  {label}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </React.Fragment>
           ))}
         </tbody>
       </table>
@@ -218,7 +254,7 @@ export default function MatchSummary() {
                   <BattingTable batsmen={inn.batsmen} extras={inn.extras} totalRuns={inn.runs} totalWickets={inn.wickets} totalBalls={inn.legalBalls} />
                   <div className="divider" style={{ margin: '16px 0' }} />
                   <div style={{ fontWeight: 700, fontSize: '0.8rem', marginBottom: 8, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>BOWLING</div>
-                  <BowlingTable bowlers={inn.bowlers} />
+                  <BowlingTable bowlers={inn.bowlers} overHistory={inn.overHistory} />
                 </div>
               </div>
             </div>
