@@ -652,13 +652,13 @@ export default function LiveScoring() {
         {innings.overHistory && innings.overHistory.length > 0 && (
           <div style={{ marginTop: 16 }}>
             <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Recent Overs</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {innings.overHistory.slice(-3).reverse().map((o, idx) => (
-                <div key={idx} style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.05)', borderRadius: 8, padding: '8px 12px' }}>
-                  <div style={{ width: 50, fontSize: '0.8rem', fontWeight: 700, color: 'var(--color-primary-light)' }}>
+            <div style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 8, WebkitOverflowScrolling: 'touch', alignItems: 'center' }}>
+              {innings.overHistory.slice(-3).map((o, idx) => (
+                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, background: 'rgba(255,255,255,0.05)', borderRadius: 99, padding: '4px 12px 4px 8px' }}>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>
                     Ov {o.over}
                   </div>
-                  <div className="over-balls" style={{ flex: 1, gap: 4, justifyContent: 'flex-start' }}>
+                  <div className="over-balls" style={{ display: 'flex', gap: 4 }}>
                     {o.balls.map((b, i) => {
                       let cls = 'ball-0';
                       if (b.type === DELIVERY_TYPES.WICKET) cls = 'ball-W';
@@ -673,9 +673,6 @@ export default function LiveScoring() {
                         </div>
                       );
                     })}
-                  </div>
-                  <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'white', marginLeft: 8 }}>
-                    {o.runs} {o.runs === 1 ? 'run' : 'runs'}
                   </div>
                 </div>
               ))}
