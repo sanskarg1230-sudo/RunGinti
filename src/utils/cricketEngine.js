@@ -301,6 +301,27 @@ export function processDelivery(innings, delivery, target = null) {
 // Add a new batsman to innings
 export function addBatsman(innings, playerId, name, isStriker = true) {
   const state = deepClone(innings);
+  
+  // Check if batsman already exists (e.g., returning from Retired Hurt)
+  const existingIdx = state.batsmen.findIndex(b => b.playerId === playerId);
+  if (existingIdx !== -1) {
+    state.batsmen[existingIdx].isOnCrease = true;
+    state.batsmen[existingIdx].isOut = false;
+    state.batsmen[existingIdx].dismissal = null;
+    
+    if (isStriker) {
+      state.strikerIndex = existingIdx;
+    } else {
+      state.nonStrikerIndex = existingIdx;
+    }
+    state.batsmen.forEach((b, i) => {
+      if (b.isOnCrease && !b.isOut) {
+        b.isStriker = (i === state.strikerIndex);
+      }
+    });
+    return state;
+  }
+
   const batsman = initBatsman(playerId, name);
   batsman.isStriker = isStriker;
   state.batsmen.push(batsman);

@@ -254,13 +254,14 @@ export default function LiveScoring() {
     if (!match || !innings) return [];
     const ci = match.currentInnings;
     const teamIdx = getBattingTeamIdx(ci);
-    const used = innings.batsmen.map(b => b.playerId);
+    // A player is unavailable if they are out OR currently on the crease
+    const unavailable = innings.batsmen.filter(b => b.isOut || b.isOnCrease).map(b => b.playerId);
     return allPlayers[teamIdx]?.map(p => ({
       id: p.id,
       name: p.name,
       number: p.number,
       role: p.role,
-    })).filter(p => !used.includes(p.id)) || [];
+    })).filter(p => !unavailable.includes(p.id)) || [];
   }, [match, innings, allPlayers, getBattingTeamIdx]);
 
   const getBowlingPlayers = useCallback(() => {
@@ -515,6 +516,21 @@ export default function LiveScoring() {
       striker.dismissal = 'Retired Out';
     }
     updated.wickets += 1;
+    updated.strikerIndex = null;
+    setInnings(updated);
+    persistInnings(updated);
+    setShowNewBatsman(true);
+  };
+
+  const handleRetiredHurt = () => {
+    if (innings.strikerIndex === null) return;
+    const updated = { ...innings };
+    const striker = updated.batsmen[updated.strikerIndex];
+    if (striker) {
+      striker.isOut = false; // Not out
+      striker.isOnCrease = false;
+      striker.dismissal = 'Retired Hurt';
+    }
     updated.strikerIndex = null;
     setInnings(updated);
     persistInnings(updated);
@@ -812,16 +828,21 @@ export default function LiveScoring() {
         </div>
 
         {/* Actions */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginBottom: 14 }}>
           <button className="btn btn-ghost btn-sm" onClick={handleChangeStrike}>
             <RefreshCw size={15} /> Change Strike
           </button>
           <button className="btn btn-ghost btn-sm" onClick={handleUndo}>
             <RotateCcw size={15} /> Undo Last Ball
           </button>
-          <button className="btn btn-ghost btn-sm" onClick={handleRetiredOut}>
-            Retired Out
-          </button>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
+            <button className="btn btn-ghost btn-sm" style={{ padding: '0 4px', fontSize: '0.75rem' }} onClick={handleRetiredOut}>
+              Ret. Out
+            </button>
+            <button className="btn btn-ghost btn-sm" style={{ padding: '0 4px', fontSize: '0.75rem' }} onClick={handleRetiredHurt}>
+              Ret. Hurt
+            </button>
+          </div>
           <button className="btn btn-ghost btn-sm" onClick={() => navigate(`/match/${matchId}/summary`)}>
             View Scorecard
           </button>
