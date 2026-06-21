@@ -674,16 +674,43 @@ a { color: var(--color-primary); text-decoration: none; }
 }
 
 .ball-indicator {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 0.75rem;
   font-weight: 700;
+  flex-shrink: 0;
+  animation: ballPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
   font-family: 'Rajdhani', sans-serif;
 }
+
+@keyframes ballPop {
+  0% { transform: scale(0); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes slideInRight {
+  0% { transform: translate(100%, -50%); opacity: 0; }
+  100% { transform: translate(0, -50%); opacity: 1; }
+}
+
+@keyframes fadeOutZoom {
+  0% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.5); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.animate-slide-in-right { animation: slideInRight 0.5s ease-out forwards; }
+.animate-fade-out-zoom { animation: fadeOutZoom 2s ease-in forwards; }
+body.animate-shake .app-shell { animation: shake 0.2s ease-in-out 0s 2; }
 
 .ball-0 { background: var(--bg-surface-2); color: var(--text-muted); }
 .ball-1 { background: #dbeafe; color: #1d4ed8; }

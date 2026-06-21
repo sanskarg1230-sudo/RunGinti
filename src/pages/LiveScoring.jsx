@@ -13,6 +13,7 @@ import {
 import PlayerSelectModal from '../components/PlayerSelectModal';
 import DismissalModal from '../components/DismissalModal';
 import { showToast } from '../components/Toast';
+import { triggerBoundary, triggerWicket } from '../components/MatchAnimations';
 
 // ── Match Settings Modal ──────────────────────────────────────────────────
 function MatchSettingsModal({ match, onSave, onClose }) {
@@ -302,6 +303,13 @@ export default function LiveScoring() {
   };
 
   const processAndSave = async (delivery) => {
+    if (delivery.runs === 4 || delivery.runs === 6) {
+      triggerBoundary(delivery.runs);
+    }
+    if (delivery.type === DELIVERY_TYPES.WICKET) {
+      triggerWicket();
+    }
+
     const target = match.currentInnings > 0 && match.matchType !== MATCH_TYPES.TEST
       ? (match.innings?.[match.currentInnings - 1]?.runs || 0) + 1
       : null;

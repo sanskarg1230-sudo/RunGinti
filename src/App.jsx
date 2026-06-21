@@ -10,6 +10,7 @@ import MatchResult from './pages/MatchResult';
 import MatchHistory from './pages/MatchHistory';
 import Statistics from './pages/Statistics';
 import Settings from './pages/Settings';
+import MatchAnimations from './components/MatchAnimations';
 
 export default function App() {
   return (
@@ -33,6 +34,7 @@ export default function App() {
         <BottomNav />
       </div>
       <Toast />
+      <MatchAnimations />
     </div>
   );
 }
