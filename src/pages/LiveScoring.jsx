@@ -13,7 +13,7 @@ import {
 import PlayerSelectModal from '../components/PlayerSelectModal';
 import DismissalModal from '../components/DismissalModal';
 import { showToast } from '../components/Toast';
-import { triggerBoundary, triggerWicket } from '../components/MatchAnimations';
+import { triggerBoundary, triggerWicket, triggerMilestone } from '../components/MatchAnimations';
 
 // ── Match Settings Modal ──────────────────────────────────────────────────
 function MatchSettingsModal({ match, onSave, onClose }) {
@@ -322,7 +322,22 @@ export default function LiveScoring() {
       clone.teamSize = allPlayers[getBattingTeamIdx(match.currentInnings)]?.length || 11;
     }
 
+    const strikerBefore = clone.batsmen[clone.strikerIndex];
+    const runsBefore = strikerBefore ? strikerBefore.runs : 0;
+    const batsmanName = strikerBefore ? strikerBefore.name : '';
+    const strikerPlayerId = strikerBefore ? strikerBefore.playerId : null;
+
     let updated = processDelivery(clone, delivery, target);
+
+    if (strikerPlayerId) {
+      const strikerAfter = updated.batsmen.find(b => b.playerId === strikerPlayerId);
+      const runsAfter = strikerAfter ? strikerAfter.runs : 0;
+      if (Math.floor(runsAfter / 50) > Math.floor(runsBefore / 50) && runsAfter >= 50) {
+        const milestone = Math.floor(runsAfter / 50) * 50;
+        triggerMilestone(milestone, batsmanName);
+      }
+    }
+
     setInnings(updated);
 
     // Log ball

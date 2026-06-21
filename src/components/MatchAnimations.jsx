@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 
 let triggerBoundaryFn = null;
 let triggerWicketFn = null;
+let triggerMilestoneFn = null;
 
 export function triggerBoundary(runs) {
   if (triggerBoundaryFn) triggerBoundaryFn(runs);
@@ -11,9 +12,14 @@ export function triggerWicket() {
   if (triggerWicketFn) triggerWicketFn();
 }
 
+export function triggerMilestone(runs, batsmanName) {
+  if (triggerMilestoneFn) triggerMilestoneFn(runs, batsmanName);
+}
+
 export default function MatchAnimations() {
   const [boundaryRuns, setBoundaryRuns] = useState(null);
   const [showWicket, setShowWicket] = useState(false);
+  const [milestone, setMilestone] = useState(null); // { runs, batsmanName }
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -93,9 +99,18 @@ export default function MatchAnimations() {
       }, 2500);
     };
 
+    triggerMilestoneFn = (runs, batsmanName) => {
+      setMilestone({ runs, batsmanName });
+      createExplosion(window.innerWidth / 2, window.innerHeight / 2, ['#fbbf24', '#f59e0b', '#ffffff', '#fbbf24']); // Gold particles
+      setTimeout(() => {
+        setMilestone(null);
+      }, 3500);
+    };
+
     return () => {
       triggerBoundaryFn = null;
       triggerWicketFn = null;
+      triggerMilestoneFn = null;
       window.removeEventListener('resize', resize);
       cancelAnimationFrame(animationFrameId);
     };
@@ -139,6 +154,50 @@ export default function MatchAnimations() {
             textShadow: '0 0 50px rgba(34,197,94,0.8)',
           }}>
             {boundaryRuns}
+          </span>
+        </div>
+      )}
+
+      {/* Milestone Overlay */}
+      {milestone && (
+        <div 
+          className="animate-fade-out-zoom"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            pointerEvents: 'none',
+            zIndex: 1100,
+            backgroundColor: 'rgba(0,0,0,0.4)',
+            backdropFilter: 'blur(4px)',
+            animationDuration: '3.5s',
+          }}
+        >
+          <span style={{
+            fontSize: '8rem',
+            fontWeight: 900,
+            color: '#fbbf24',
+            fontStyle: 'italic',
+            textShadow: '0 0 40px rgba(245,158,11,0.8)',
+            lineHeight: 1,
+            marginBottom: '1rem',
+          }}>
+            {milestone.runs}
+          </span>
+          <span style={{
+            fontSize: '2.5rem',
+            fontWeight: 800,
+            color: 'white',
+            textTransform: 'uppercase',
+            letterSpacing: '0.1em',
+            textShadow: '0 2px 10px rgba(0,0,0,0.5)',
+            textAlign: 'center',
+            padding: '0 20px',
+          }}>
+            {milestone.batsmanName}
           </span>
         </div>
       )}
