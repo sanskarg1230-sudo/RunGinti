@@ -9,7 +9,7 @@ import { exportMatchPDF } from '../utils/exportPDF';
 import { exportMatchJSON } from '../utils/exportJSON';
 import { showToast } from '../components/Toast';
 
-function BattingTable({ batsmen, extras, totalRuns, totalWickets, totalBalls }) {
+function BattingTable({ batsmen, extras, totalRuns, totalWickets, totalBalls, onPlayerClick }) {
   const ext = extras || {};
   const extTotal = (ext.wides||0)+(ext.noBalls||0)+(ext.byes||0)+(ext.legByes||0)+(ext.penalties||0);
   return (
@@ -29,7 +29,12 @@ function BattingTable({ batsmen, extras, totalRuns, totalWickets, totalBalls }) 
         <tbody>
           {(batsmen||[]).map((b, i) => (
             <tr key={i} className={b.isOut ? 'out-row' : ''}>
-              <td style={{ fontWeight: 600 }}>{b.name}</td>
+              <td 
+                style={{ fontWeight: 600, color: 'var(--color-primary)', cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: 2 }} 
+                onClick={() => onPlayerClick(b)}
+              >
+                {b.name}
+              </td>
               <td style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                 {b.isOut ? `${b.dismissal}${b.dismissedBy ? ` b ${b.dismissedBy}` : ''}` : 'not out'}
               </td>
@@ -60,7 +65,7 @@ function BattingTable({ batsmen, extras, totalRuns, totalWickets, totalBalls }) 
   );
 }
 
-function BowlingTable({ bowlers, overHistory }) {
+function BowlingTable({ bowlers, overHistory, onPlayerClick }) {
   return (
     <div style={{ overflowX: 'auto' }}>
       <table className="score-table">
@@ -77,54 +82,103 @@ function BowlingTable({ bowlers, overHistory }) {
         </thead>
         <tbody>
           {(bowlers||[]).map((b, i) => (
-            <React.Fragment key={i}>
-              <tr>
-                <td style={{ fontWeight: 600 }}>{b.name}</td>
-                <td>{formatOvers(b.legalBalls)}</td>
-                <td>{b.maidens}</td>
-                <td>{b.runs}</td>
-                <td style={{ fontWeight: 700, color: b.wickets > 0 ? 'var(--color-primary)' : undefined }}>{b.wickets}</td>
-                <td>{calcEconomy(b.runs, b.legalBalls)}</td>
-                <td style={{ fontSize: '0.8rem' }}>{b.wides||0}/{b.noBalls||0}</td>
-              </tr>
-              {overHistory && overHistory.some(oh => oh.bowlerName === b.name) && (
-                <tr>
-                  <td colSpan={7} style={{ padding: '8px 12px', background: 'var(--bg-surface-2)', borderBottom: '1px solid var(--border-color)' }}>
-                    <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
-                      {overHistory.filter(oh => oh.bowlerName === b.name).map((oh, j) => (
-                        <div key={j} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--bg-surface)', padding: '6px 10px', borderRadius: 8, flexShrink: 0, border: '1px solid var(--border-color)' }}>
-                          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)' }}>Ov {oh.over + 1}</span>
-                          <div style={{ display: 'flex', gap: 4 }}>
-                            {oh.balls.map((ball, bi) => {
-                              let cls = 'ball-0';
-                              let label = ball.runs;
-                              if (ball.type === DELIVERY_TYPES.WICKET) { cls = 'ball-W'; label = 'W'; }
-                              else if (ball.type === DELIVERY_TYPES.WIDE) { cls = 'ball-Wd'; label = 'Wd'; }
-                              else if (ball.type === DELIVERY_TYPES.NO_BALL) { cls = 'ball-NB'; label = 'NB'; }
-                              else if (ball.runs === 6) cls = 'ball-6';
-                              else if (ball.runs === 4) cls = 'ball-4';
-                              else cls = `ball-${ball.runs}`;
-                              
-                              if (ball.type === DELIVERY_TYPES.BYE) label = `${ball.runs}B`;
-                              if (ball.type === DELIVERY_TYPES.LEG_BYE) label = `${ball.runs}LB`;
-
-                              return (
-                                <div key={bi} className={`ball-indicator ${cls}`} style={{ width: 22, height: 22, fontSize: '0.65rem', animation: 'none' }}>
-                                  {label}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </React.Fragment>
+            <tr key={i}>
+              <td 
+                style={{ fontWeight: 600, color: 'var(--color-primary)', cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: 2 }} 
+                onClick={() => onPlayerClick(b)}
+              >
+                {b.name}
+              </td>
+              <td>{formatOvers(b.legalBalls)}</td>
+              <td>{b.maidens}</td>
+              <td>{b.runs}</td>
+              <td style={{ fontWeight: 700, color: b.wickets > 0 ? 'var(--color-primary)' : undefined }}>{b.wickets}</td>
+              <td>{calcEconomy(b.runs, b.legalBalls)}</td>
+              <td style={{ fontSize: '0.8rem' }}>{b.wides||0}/{b.noBalls||0}</td>
+            </tr>
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+function PlayerDetailsModal({ playerInfo, onClose }) {
+  if (!playerInfo) return null;
+  const { type, data, overHistory } = playerInfo;
+
+  const boxStyle = { background: 'var(--bg-surface-2)', padding: '12px 8px', borderRadius: 12 };
+  const valStyle = { fontWeight: 800, fontSize: '1.4rem', color: 'var(--color-primary)' };
+  const lblStyle = { fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginTop: 4, fontWeight: 600 };
+
+  return (
+    <div className="modal-overlay centered" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal centered animate-scale-in" style={{ maxWidth: 420, width: '90%', padding: '24px' }}>
+        <div className="modal-handle" />
+        <div style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: 20, textAlign: 'center' }}>
+          {data.name}
+        </div>
+        
+        {type === 'bowler' && (
+          <div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, textAlign: 'center', marginBottom: 20 }}>
+              <div style={boxStyle}><div style={valStyle}>{formatOvers(data.legalBalls)}</div><div style={lblStyle}>Overs</div></div>
+              <div style={boxStyle}><div style={valStyle}>{data.maidens}</div><div style={lblStyle}>Maidens</div></div>
+              <div style={boxStyle}><div style={valStyle}>{data.runs}</div><div style={lblStyle}>Runs</div></div>
+              <div style={boxStyle}><div style={valStyle}>{data.wickets}</div><div style={lblStyle}>Wickets</div></div>
+            </div>
+            
+            <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: 10, textTransform: 'uppercase' }}>Overs Timeline</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: '40vh', overflowY: 'auto', paddingRight: 4 }}>
+              {overHistory && overHistory.filter(oh => oh.bowlerName === data.name).map((oh, j) => (
+                <div key={j} style={{ background: 'var(--bg-surface-2)', padding: '12px', borderRadius: 12, border: '1px solid var(--border-color)' }}>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: 8 }}>Over {oh.over + 1}</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {oh.balls.map((ball, bi) => {
+                      let cls = 'ball-0';
+                      let label = ball.runs;
+                      if (ball.type === DELIVERY_TYPES.WICKET) { cls = 'ball-W'; label = 'W'; }
+                      else if (ball.type === DELIVERY_TYPES.WIDE) { cls = 'ball-Wd'; label = 'Wd'; }
+                      else if (ball.type === DELIVERY_TYPES.NO_BALL) { cls = 'ball-NB'; label = 'NB'; }
+                      else if (ball.runs === 6) cls = 'ball-6';
+                      else if (ball.runs === 4) cls = 'ball-4';
+                      else cls = `ball-${ball.runs}`;
+                      
+                      if (ball.type === DELIVERY_TYPES.BYE) label = `${ball.runs}B`;
+                      if (ball.type === DELIVERY_TYPES.LEG_BYE) label = `${ball.runs}LB`;
+
+                      return (
+                        <div key={bi} className={`ball-indicator ${cls}`} style={{ width: 28, height: 28, animation: 'none' }}>
+                          {label}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+              {(!overHistory || !overHistory.some(oh => oh.bowlerName === data.name)) && (
+                <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center', padding: '20px 0' }}>No overs recorded yet.</div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {type === 'batsman' && (
+          <div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, textAlign: 'center', marginBottom: 20 }}>
+              <div style={boxStyle}><div style={valStyle}>{data.runs}</div><div style={lblStyle}>Runs</div></div>
+              <div style={boxStyle}><div style={valStyle}>{data.balls}</div><div style={lblStyle}>Balls</div></div>
+              <div style={boxStyle}><div style={valStyle}>{data.fours}</div><div style={lblStyle}>4s</div></div>
+              <div style={boxStyle}><div style={valStyle}>{data.sixes}</div><div style={lblStyle}>6s</div></div>
+            </div>
+            <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', textAlign: 'center', background: 'var(--bg-surface-2)', padding: '12px', borderRadius: 8 }}>
+              Status: <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{data.isOut ? `${data.dismissal} ${data.dismissedBy ? `b ${data.dismissedBy}` : ''}` : 'Not Out'}</span>
+            </div>
+          </div>
+        )}
+
+        <button className="btn btn-secondary btn-full" style={{ marginTop: 24 }} onClick={onClose}>Close</button>
+      </div>
     </div>
   );
 }
@@ -136,6 +190,7 @@ export default function MatchSummary() {
   const [match, setMatch] = useState(null);
   const [activeTab, setActiveTab] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
 
   useEffect(() => {
     getMatch(Number(id)).then(m => { setMatch(m); setLoading(false); });
@@ -251,10 +306,21 @@ export default function MatchSummary() {
                 </div>
                 <div className="card-body">
                   <div style={{ fontWeight: 700, fontSize: '0.8rem', marginBottom: 8, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>BATTING</div>
-                  <BattingTable batsmen={inn.batsmen} extras={inn.extras} totalRuns={inn.runs} totalWickets={inn.wickets} totalBalls={inn.legalBalls} />
+                  <BattingTable 
+                    batsmen={inn.batsmen} 
+                    extras={inn.extras} 
+                    totalRuns={inn.runs} 
+                    totalWickets={inn.wickets} 
+                    totalBalls={inn.legalBalls} 
+                    onPlayerClick={(b) => setSelectedPlayer({ type: 'batsman', data: b })}
+                  />
                   <div className="divider" style={{ margin: '16px 0' }} />
                   <div style={{ fontWeight: 700, fontSize: '0.8rem', marginBottom: 8, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>BOWLING</div>
-                  <BowlingTable bowlers={inn.bowlers} overHistory={inn.overHistory} />
+                  <BowlingTable 
+                    bowlers={inn.bowlers} 
+                    overHistory={inn.overHistory} 
+                    onPlayerClick={(b) => setSelectedPlayer({ type: 'bowler', data: b, overHistory: inn.overHistory })}
+                  />
                 </div>
               </div>
             </div>
@@ -297,6 +363,8 @@ export default function MatchSummary() {
           </button>
         )}
       </div>
+
+      <PlayerDetailsModal playerInfo={selectedPlayer} onClose={() => setSelectedPlayer(null)} />
     </div>
   );
 }
