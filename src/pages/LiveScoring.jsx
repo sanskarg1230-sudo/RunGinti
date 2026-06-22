@@ -290,9 +290,14 @@ export default function LiveScoring() {
     if (!match || !innings) return [];
     const ci = match.currentInnings;
     const teamIdx = getBowlingTeamIdx(ci);
+    
+    // Find names of players currently batting (useful to exclude common player who is currently on strike/non-strike)
+    const currentlyBattingNames = innings.batsmen
+      .filter(b => b.isOnCrease)
+      .map(b => b.name);
+
     // Can't bowl consecutive overs (check last bowler)
     const lastBowlerIdx = innings.currentBowlerIndex;
-    const overs = Math.floor(innings.legalBalls / 6);
     const lastBowler = lastBowlerIdx !== null && innings.legalBalls % 6 === 0
       ? innings.bowlers[lastBowlerIdx]?.playerId
       : null;
@@ -302,7 +307,7 @@ export default function LiveScoring() {
       name: p.name,
       number: p.number,
       role: p.role,
-    })) || [];
+    })).filter(p => p.id !== lastBowler && !currentlyBattingNames.includes(p.name)) || [];
   }, [match, innings, allPlayers, getBowlingTeamIdx]);
 
   // Handle a delivery
