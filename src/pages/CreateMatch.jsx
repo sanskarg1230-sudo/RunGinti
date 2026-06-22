@@ -224,6 +224,7 @@ export default function CreateMatch() {
     electedTo: 'bat',
     lastManStanding: false,
     playersPerTeam: 11,
+    commonPlayer: '',
   });
 
   const [teamAPlayers, setTeamAPlayers] = useState(defaultPlayers(11));
@@ -327,8 +328,19 @@ export default function CreateMatch() {
         status: 'live',
       });
 
-      const aValid = teamAPlayers.filter(p => p.name.trim());
-      const bValid = teamBPlayers.filter(p => p.name.trim());
+      let aValid = teamAPlayers.filter(p => p.name.trim());
+      let bValid = teamBPlayers.filter(p => p.name.trim());
+
+      if (form.commonPlayer && form.commonPlayer.trim()) {
+        const cp = { name: form.commonPlayer.trim(), role: 'Common Player' };
+        cp.number = Math.max(...aValid.map(p => p.number), 0) + 1;
+        aValid.push({ ...cp });
+        
+        const cpB = { name: form.commonPlayer.trim(), role: 'Common Player' };
+        cpB.number = Math.max(...bValid.map(p => p.number), 0) + 1;
+        bValid.push(cpB);
+      }
+
       await addPlayers(matchId, 0, aValid);
       await addPlayers(matchId, 1, bValid);
 
@@ -607,6 +619,23 @@ function StepMatchSetup({ form, updateForm }) {
               >
                 <Plus size={14} />
               </button>
+            </div>
+          </div>
+
+          {/* Common Player */}
+          <div style={{ marginTop: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--color-primary)', fontSize: '0.9rem', fontWeight: 600, marginBottom: 8 }}>
+              <span>🎭</span> Common Player
+            </div>
+            <input
+              className="form-input"
+              style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-color)', padding: '10px 14px' }}
+              placeholder="e.g. Rahul (Optional)"
+              value={form.commonPlayer || ''}
+              onChange={e => updateForm('commonPlayer', e.target.value)}
+            />
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>
+              This player will automatically be added to both teams.
             </div>
           </div>
 
