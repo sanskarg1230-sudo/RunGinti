@@ -60,26 +60,28 @@ export default function DismissalModal({ batsmen, bowlers, onConfirm, onClose })
           </div>
         )}
 
-        <div className="form-group">
-          <label className="form-label">Runs scored on this ball</label>
-          <div style={{ display: 'flex', gap: 8 }}>
-            {[0,1,2,3,4].map(r => (
-              <button
-                key={r}
-                onClick={() => setRuns(r)}
-                className="btn btn-sm"
-                style={{
-                  flex: 1,
-                  background: runs === r ? 'var(--color-primary)' : 'var(--bg-surface-2)',
-                  color: runs === r ? 'white' : 'var(--text-primary)',
-                  border: 'none',
-                }}
-              >
-                {r}
-              </button>
-            ))}
+        {dismissal === DISMISSAL_TYPES.RUN_OUT && (
+          <div className="form-group">
+            <label className="form-label">Runs scored on this ball</label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {[0,1,2,3,4].map(r => (
+                <button
+                  key={r}
+                  onClick={() => setRuns(r)}
+                  className="btn btn-sm"
+                  style={{
+                    flex: 1,
+                    background: runs === r ? 'var(--color-primary)' : 'var(--bg-surface-2)',
+                    color: runs === r ? 'white' : 'var(--text-primary)',
+                    border: 'none',
+                  }}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         <div style={{ display: 'flex', gap: 8 }}>
           <button className="btn btn-secondary" style={{ flex: 1 }} onClick={onClose}>Cancel</button>
@@ -89,7 +91,7 @@ export default function DismissalModal({ batsmen, bowlers, onConfirm, onClose })
             onClick={() => {
               onConfirm({
                 dismissalType: dismissal,
-                runs,
+                runs: dismissal === DISMISSAL_TYPES.RUN_OUT ? runs : 0,
                 dismissedBatsmanIndex: dismissedBatsmanIndex ?? batsmen?.findIndex(b => !b.isOut && b.isStriker),
                 fielder,
               });
