@@ -232,7 +232,18 @@ export function processDelivery(innings, delivery, target = null) {
   }
 
   // ── Strike rotation ──────────────────────────────────────────────────────
-  if (type !== DELIVERY_TYPES.WICKET) {
+  // In cricket, strike rotates if runs are odd.
+  // For wickets:
+  // - Caught, Bowled, Stumped, LBW, Hit Wicket, Caught Behind: Strike DOES NOT rotate (2022 rule change).
+  // - Run Out, Obstructing Field: Strike DOES rotate based on runs completed before the dismissal.
+  const noRotationWickets = [
+    DISMISSAL_TYPES.CAUGHT, DISMISSAL_TYPES.BOWLED, DISMISSAL_TYPES.LBW, 
+    DISMISSAL_TYPES.STUMPED, DISMISSAL_TYPES.HIT_WICKET, DISMISSAL_TYPES.CAUGHT_BEHIND
+  ];
+  
+  const shouldRotate = type !== DELIVERY_TYPES.WICKET || !noRotationWickets.includes(delivery.dismissalType);
+
+  if (shouldRotate) {
     const oddRuns = (runs + extras) % 2 === 1;
     if (oddRuns && state.nonStrikerIndex !== null) {
       // Swap striker and non-striker
