@@ -202,6 +202,7 @@ export default function LiveScoring() {
   const [showRetireModal, setShowRetireModal] = useState(false);
   const [showExtrasModal, setShowExtrasModal] = useState(null);
   const [showEditPlayer, setShowEditPlayer] = useState(null); // player object to edit
+  const [changingBatsmanId, setChangingBatsmanId] = useState(null);
   const [pendingWicket, setPendingWicket] = useState(null);
   const [lastBallId, setLastBallId] = useState(null);
 
@@ -500,6 +501,27 @@ export default function LiveScoring() {
     persistInnings(updated);
   };
 
+  const handleChangeBatsman = (newPlayer) => {
+    const updated = deepClone(innings);
+    const oldIdx = updated.batsmen.findIndex(b => b.playerId === changingBatsmanId);
+    const existingIdx = updated.batsmen.findIndex(b => b.playerId === newPlayer.id);
+
+    if (existingIdx !== -1 && existingIdx !== oldIdx) {
+      showToast("Player is already in the batting lineup!");
+      setChangingBatsmanId(null);
+      return;
+    }
+
+    if (oldIdx !== -1) {
+      updated.batsmen[oldIdx].playerId = newPlayer.id;
+      updated.batsmen[oldIdx].name = newPlayer.name;
+      setInnings(updated);
+      persistInnings(updated);
+      showToast("Batsman changed ✓");
+    }
+    setChangingBatsmanId(null);
+  };
+
   const handleNewBatsman = (player) => {
     const isStriker = innings.strikerIndex === null;
     const updated = addBatsman(innings, player.id, player.name, isStriker);
@@ -766,8 +788,15 @@ export default function LiveScoring() {
                   4s: {batsman.fours} | 6s: {batsman.sixes} | SR: {(batsman.balls > 0 ? (batsman.runs / batsman.balls * 100).toFixed(1) : '0.0')}
                 </div>
               </div>
-              <div style={{ textAlign: 'right' }}>
+              <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
                 <div className="batsman-runs">{batsman.runs}<span style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontFamily: 'Inter' }}>* ({batsman.balls})</span></div>
+                <button 
+                  className="btn btn-sm btn-ghost" 
+                  style={{ padding: '4px 10px', fontSize: '0.75rem', marginTop: 4, height: 'auto', minHeight: 'unset' }}
+                  onClick={(e) => { e.stopPropagation(); setChangingBatsmanId(batsman.playerId); }}
+                >
+                  Change
+                </button>
               </div>
             </motion.div>
           ))}
@@ -929,6 +958,15 @@ export default function LiveScoring() {
             bowlers={innings.bowlers}
             onConfirm={handleDismissalConfirm}
             onClose={() => { setShowDismissal(false); setPendingWicket(null); }}
+          />
+        )}
+        {changingBatsmanId && (
+          <PlayerSelectModal
+            title="Change Batsman"
+            players={getBattingPlayers(true)}
+            onSelect={handleChangeBatsman}
+            onClose={() => setChangingBatsmanId(null)}
+            excludeIds={innings.batsmen.filter(b => b.isOnCrease && !b.isOut && b.playerId !== changingBatsmanId).map(b => b.playerId)}
           />
         )}
         {showRetireModal && (
