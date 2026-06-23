@@ -8,7 +8,7 @@ import {
 import {
   processDelivery, addBatsman, addBowler, initInnings,
   formatOvers, calcCRR, calcRRR, DELIVERY_TYPES, MATCH_TYPES,
-  getInningsLabel, getMaxInnings, calculateResult
+  getInningsLabel, getMaxInnings, calculateResult, deepClone
 } from '../utils/cricketEngine';
 import PlayerSelectModal from '../components/PlayerSelectModal';
 import DismissalModal from '../components/DismissalModal';
@@ -481,26 +481,14 @@ export default function LiveScoring() {
   };
 
   const handleSelectStriker = (player) => {
-    let updated = innings;
-    if (!innings.batsmen.some(b => b.playerId === player.id)) {
-      updated = addBatsman(innings, player.id, player.name, true);
-    } else {
-      // Set as striker
-      updated = { ...innings };
-      const idx = updated.batsmen.findIndex(b => b.playerId === player.id);
-      updated.strikerIndex = idx;
-      updated.batsmen = updated.batsmen.map((b, i) => ({ ...b, isStriker: i === idx }));
-    }
+    const updated = addBatsman(innings, player.id, player.name, true);
     setInnings(updated);
     persistInnings(updated);
-    if (!updated.nonStrikerIndex !== null) setShowNonStrikerSelect(true);
+    if (updated.nonStrikerIndex === null) setShowNonStrikerSelect(true);
   };
 
   const handleSelectNonStriker = (player) => {
-    let updated = innings;
-    if (!innings.batsmen.some(b => b.playerId === player.id)) {
-      updated = addBatsman(innings, player.id, player.name, false);
-    }
+    const updated = addBatsman(innings, player.id, player.name, false);
     setInnings(updated);
     persistInnings(updated);
     if (updated.currentBowlerIndex === null) setShowBowlerSelect(true);
@@ -513,7 +501,8 @@ export default function LiveScoring() {
   };
 
   const handleNewBatsman = (player) => {
-    const updated = addBatsman(innings, player.id, player.name, true);
+    const isStriker = innings.strikerIndex === null;
+    const updated = addBatsman(innings, player.id, player.name, isStriker);
     setInnings(updated);
     persistInnings(updated);
   };
@@ -535,7 +524,7 @@ export default function LiveScoring() {
 
   const handleRetiredOut = () => {
     if (innings.strikerIndex === null) return;
-    const updated = { ...innings };
+    const updated = deepClone(innings);
     const striker = updated.batsmen[updated.strikerIndex];
     if (striker) {
       striker.isOut = true;
@@ -551,7 +540,7 @@ export default function LiveScoring() {
 
   const handleRetiredHurt = () => {
     if (innings.strikerIndex === null) return;
-    const updated = { ...innings };
+    const updated = deepClone(innings);
     const striker = updated.batsmen[updated.strikerIndex];
     if (striker) {
       striker.isOut = false; // Not out

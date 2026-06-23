@@ -433,6 +433,6 @@ export function shouldSwapTeams(inningsIndex, matchType, innings) {
   return true; // always alternate
 }
 
-function deepClone(obj) {
+export function deepClone(obj) {
   return JSON.parse(JSON.stringify(obj));
 }
